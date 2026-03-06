@@ -1,66 +1,158 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# User Data Processing API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST para importação e consulta de usuários a partir de arquivo JSON.
 
-## About Laravel
+## Tecnologias
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.0+
+- Laravel 9
+- MySQL (padrão no `.env.example`)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requisitos Implementados
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Importação de usuários via `multipart/form-data`
+- Persistência em banco na tabela `imported_users`
+- Busca individual por ID
+- Validação de dados na importação
+- Processamento em lotes (`upsert`) para melhor performance
 
-## Learning Laravel
+## Estrutura dos Dados
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Campos obrigatórios por usuário:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- `id` (mapeado de `_id` no JSON de entrada)
+- `first_name`
+- `last_name`
+- `email`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Endpoints
 
-## Laravel Sponsors
+### 1. Importar usuários
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+`POST /api/users/import`
 
-### Premium Partners
+Recebe arquivo no campo `file` via `form-data`.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+#### Regras de validação do arquivo
 
-## Contributing
+- obrigatório
+- tipo arquivo
+- máximo `20MB`
+- extensões aceitas: `json` e `txt`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### Exemplo cURL
 
-## Code of Conduct
+```bash
+curl --request POST \
+  --url http://127.0.0.1:8000/api/users/import \
+  --form "file=@./mock-data.json"
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+#### Exemplo de sucesso (`201`)
 
-## Security Vulnerabilities
+```json
+{
+  "message": "Importação concluída com sucesso.",
+  "total_in_file": 32000,
+  "processed_valid": 32000,
+  "skipped_invalid": 0
+}
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### Erros possíveis
 
-## License
+- `400` arquivo inválido
+- `400` JSON inválido
+- `400` formato inválido (não é array de usuários)
+- `422` arquivo sem usuários
+- `422` falha de validação no request
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 2. Buscar usuário por ID
+
+`GET /api/users/{id}`
+
+#### Exemplo cURL
+
+```bash
+curl --request GET \
+  --url http://127.0.0.1:8000/api/users/5df38f6e695566a48211da8f
+```
+
+#### Exemplo de sucesso (`200`)
+
+```json
+{
+  "user": {
+    "id": "5df38f6e695566a48211da8f",
+    "first_name": "Blankenship",
+    "last_name": "Vincent",
+    "email": "blankenshipvincent@rocklogic.com"
+  }
+}
+```
+
+#### Exemplo não encontrado (`404`)
+
+```json
+{
+  "error": "Usuário não encontrado."
+}
+```
+
+## Como executar localmente
+
+1. Entrar na pasta da API:
+
+```bash
+cd api
+```
+
+2. Instalar dependências:
+
+```bash
+composer install
+```
+
+3. Criar arquivo de ambiente:
+
+```bash
+cp .env.example .env
+```
+
+4. Gerar chave da aplicação:
+
+```bash
+php artisan key:generate
+```
+
+5. Configurar banco no `.env` (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
+
+6. Rodar migrations:
+
+```bash
+php artisan migrate
+```
+
+7. Subir servidor local:
+
+```bash
+php artisan serve
+```
+
+A API ficará disponível em:
+
+- `http://127.0.0.1:8000`
+
+## Testes
+
+Executar testes:
+
+```bash
+php artisan test
+```
+
+## Observações de implementação
+
+- A importação usa `upsert` por `id`, então reimportar atualiza `first_name`, `last_name`, `email` e `updated_at`.
+- O processamento é feito em lotes de 1000 registros.
+- Registros inválidos são ignorados e contabilizados em `skipped_invalid`.
