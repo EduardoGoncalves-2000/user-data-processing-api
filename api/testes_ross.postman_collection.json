@@ -1,0 +1,82 @@
+{
+	"info": {
+		"_postman_id": "1aa76039-3331-4eb6-94a5-e52f60847ece",
+		"name": "testes_ross",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44164549",
+		"_collection_link": "https://eduardo-6172143.postman.co/workspace/eduardo's-Workspace~8a77a489-cbd5-482d-8c10-89f2775b61d7/collection/44164549-1aa76039-3331-4eb6-94a5-e52f60847ece?action=share&source=collection_link&creator=44164549"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file\n",
+							"type": "file",
+							"src": "/Users/eduardogoncalves/Documents/ross/user-data-processing-api/api/mock-data.json"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/users/import",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"users",
+						"import"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/users/5df38f6e695566a48211da8f",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"users",
+						"5df38f6e695566a48211da8f"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
